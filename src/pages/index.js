@@ -1,21 +1,49 @@
 import React from "react"
-import { Link } from "gatsby"
-
 import Layout from "../components/layout"
-import Image from "../components/image"
 import SEO from "../components/seo"
-
-const IndexPage = () => (
+import Category from "../components/home/category"
+export default ({ data }) => {
+  const categories = data.allMagentoCategory.nodes;
+  return (
   <Layout>
     <SEO title="Home" />
-    <h1>Hi people</h1>
-    <p>Welcome to your new Gatsby site.</p>
-    <p>Now go build something great.</p>
-    <div style={{ maxWidth: `300px`, marginBottom: `1.45rem` }}>
-      <Image />
-    </div>
-    <Link to="/page-2/">Go to page 2</Link>
+    {categories.map((category) => {               
+          return (<Category category={category}/>) 
+        })}
   </Layout>
-)
+  )
+}
 
-export default IndexPage
+
+
+export const query = graphql`
+query {
+  allMagentoCategory(filter: {level: {eq: 2}}) {
+    nodes {
+      id
+      magento_id
+      url_key
+      url_path
+      name
+      products {
+        name
+        url_key
+        price {
+          regularPrice {
+            amount {
+              value
+            }
+          }
+        }
+        image {
+          childImageSharp {
+            fluid(maxWidth: 300, quality:100) {
+              ...GatsbyImageSharpFluid
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`

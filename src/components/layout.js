@@ -15,17 +15,26 @@ import "./layout.css"
 const Layout = ({ children }) => (
   <StaticQuery
     query={graphql`
-      query SiteTitleQuery {
+      query {
         site {
           siteMetadata {
             title
+          }
+        }
+        allMagentoCategory(filter: {level: {eq: 2}}) {
+          nodes {
+            name
+            url_key
+            url_path
+            path
+            level
           }
         }
       }
     `}
     render={data => (
       <>
-        <Header siteTitle={data.site.siteMetadata.title} />
+        <Header siteTitle={data.site.siteMetadata.title} categories={data.allMagentoCategory.nodes} />
         <div
           style={{
             margin: `0 auto`,
@@ -38,7 +47,7 @@ const Layout = ({ children }) => (
           <footer>
             © {new Date().getFullYear()}, Built with
             {` `}
-            <a href="https://www.gatsbyjs.org">Gatsby</a>
+            <a href="https://www.gatsbyjs.org">Gatsby</a>. Author Ostap Pashko
           </footer>
         </div>
       </>

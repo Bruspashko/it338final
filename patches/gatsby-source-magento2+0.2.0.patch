@@ -1,0 +1,315 @@
+diff --git a/node_modules/gatsby-source-magento2/nodes/cmsBlocks.js b/node_modules/gatsby-source-magento2/nodes/cmsBlocks.js
+deleted file mode 100644
+index 064e0dd..0000000
+--- a/node_modules/gatsby-source-magento2/nodes/cmsBlocks.js
++++ /dev/null
+@@ -1,251 +0,0 @@
+-"use strict";
+-
+-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+-
+-exports.__esModule = true;
+-exports.default = void 0;
+-
+-var _asyncToGenerator2 = _interopRequireDefault(require("@babel/runtime/helpers/asyncToGenerator"));
+-
+-var _graphqlRequest = require("graphql-request");
+-
+-var _cmsBlocks = _interopRequireDefault(require("./queries/cmsBlocks"));
+-
+-var _cmsContentParser = _interopRequireDefault(require("./cmsContentParser"));
+-
+-var _crypto = _interopRequireDefault(require("crypto"));
+-
+-const createCmsBlockNodes = ({
+-  createNode,
+-  createPage,
+-  createNodeId,
+-  store,
+-  cache,
+-  reporter,
+-  auth
+-}, {
+-  graphqlEndpoint,
+-  storeConfig,
+-  queries
+-}, indexMap) => {
+-  if (!storeConfig) {
+-    reporter.panic(`got empty storeConfig`);
+-  }
+-
+-  if (!storeConfig.secure_base_media_url) {
+-    reporter.panic(`got empty storeConfig.secure_base_media_url`);
+-  }
+-
+-  const query = queries && queries.cmsBlockQuery ? queries.cmsBlockQuery : _cmsBlocks.default;
+-  const activity = reporter.activityTimer(`load Magento cmsBlocks`);
+-  activity.start();
+-  return new Promise(
+-  /*#__PURE__*/
+-  function () {
+-    var _ref = (0, _asyncToGenerator2.default)(function* (resolve, _reject) {
+-      const client = new _graphqlRequest.GraphQLClient(graphqlEndpoint, {});
+-
+-      try {
+-        yield fetchCMSBlocks({
+-          client,
+-          query,
+-          reject: () => {
+-            activity.end();
+-
+-            _reject();
+-          },
+-          createNode,
+-          createNodeId,
+-          storeConfig,
+-          auth,
+-          store,
+-          cache,
+-          reporter
+-        }, indexMap);
+-        activity.end();
+-        resolve();
+-      } catch (e) {
+-        console.error('Error while creating cmsBlock nodes:', e);
+-
+-        _reject(e);
+-      }
+-    });
+-
+-    return function (_x, _x2) {
+-      return _ref.apply(this, arguments);
+-    };
+-  }());
+-};
+-
+-var _default = createCmsBlockNodes;
+-/**
+- * @param context
+- * @param rootId
+- * @returns {Promise<void>}
+- */
+-
+-exports.default = _default;
+-
+-function fetchCMSBlocks(_x3, _x4) {
+-  return _fetchCMSBlocks.apply(this, arguments);
+-}
+-
+-function _fetchCMSBlocks() {
+-  _fetchCMSBlocks = (0, _asyncToGenerator2.default)(function* (context, indexMap) {
+-    const client = context.client,
+-          query = context.query,
+-          reject = context.reject,
+-          createNodeId = context.createNodeId,
+-          createNode = context.createNode,
+-          cache = context.cache,
+-          storeConfig = context.storeConfig,
+-          reporter = context.reporter;
+-
+-    try {
+-      // const categoryCacheKey = `magento-cms-block-${rootId}`;
+-      //
+-      // let res = await cache.get(categoryCacheKey);
+-      // if (!res) {
+-      let res = yield client.request(query, {
+-        ids: ['home-page-block', 'footer_links_block']
+-      }); //
+-      //     cache.set(categoryCacheKey, res);
+-      // }
+-
+-      for (var _iterator3 = res.gatsbyCmsBlocks.items, _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
+-        var _ref4;
+-
+-        if (_isArray3) {
+-          if (_i3 >= _iterator3.length) break;
+-          _ref4 = _iterator3[_i3++];
+-        } else {
+-          _i3 = _iterator3.next();
+-          if (_i3.done) break;
+-          _ref4 = _i3.value;
+-        }
+-
+-        const item = _ref4;
+-        const nodes = (0, _cmsContentParser.default)(item.content, {
+-          media_url: storeConfig.secure_base_media_url
+-        });
+-        const itemCopy = Object.assign({}, item); // itemCopy.nodes___NODE = parseChildNodes(
+-
+-        const children = parseChildNodes(item.identifier, createNode, createNodeId, nodes, indexMap);
+-        const nodeData = Object.assign({}, itemCopy, {
+-          id: createNodeId(`magento-cms-block-${item.identifier}`),
+-          magento_id: item.identifier,
+-          children,
+-          internal: {
+-            type: 'MagentoCmsBlock',
+-            content: JSON.stringify(itemCopy),
+-            contentDigest: _crypto.default.createHash(`md5`).update(JSON.stringify(itemCopy)).digest(`hex`)
+-          }
+-        });
+-        createNode(nodeData);
+-      }
+-    } catch (e) {
+-      console.error('error executing GraphQL query:', e);
+-      reject(e);
+-    }
+-  });
+-  return _fetchCMSBlocks.apply(this, arguments);
+-}
+-
+-function parseChildNodes(magentoId, createNode, createNodeId, nodes, indexMap) {
+-  return nodes.map((block, idx) => {
+-    switch (block.type) {
+-      case 'text':
+-        const node = {
+-          id: createNodeId(`cms-node-${magentoId}-${idx}`),
+-          blockType: 'text',
+-          value: block.value,
+-          // items___NODES: [],
+-          internal: {
+-            type: 'CmsTextBlockNode',
+-            contentDigest: _crypto.default.createHash(`md5`).update(block.value).digest(`hex`)
+-          }
+-        };
+-        createNode(node);
+-        return node.id;
+-
+-      case 'Magento\\CatalogWidget\\Block\\Product\\ProductsList':
+-        // WIP !!!
+-        const conditions = JSON.parse(block.conditions_encoded.replace(/\^\[/g, '{').replace(/`/g, '"').replace(/\^\]/g, '}'));
+-        let products___NODES = [];
+-        const query = conditions['1--1'];
+-        const products = indexMap.product;
+-
+-        if (query.attribute) {
+-          switch (query.operator) {
+-            case '==':
+-              const parts = query.value.replace(/\|\//g, '/').split(', ');
+-
+-              if (Array.isArray(parts)) {
+-                for (var _iterator = parts, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+-                  var _ref2;
+-
+-                  if (_isArray) {
+-                    if (_i >= _iterator.length) break;
+-                    _ref2 = _iterator[_i++];
+-                  } else {
+-                    _i = _iterator.next();
+-                    if (_i.done) break;
+-                    _ref2 = _i.value;
+-                  }
+-
+-                  const value = _ref2;
+-                  const entry = products[query.attribute + '_' + value];
+-
+-                  if (entry) {
+-                    products___NODES.push(entry);
+-                  }
+-                }
+-              }
+-
+-              break;
+-
+-            case '()':
+-              const values = query.value.split(', ');
+-
+-              for (var _iterator2 = values, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+-                var _ref3;
+-
+-                if (_isArray2) {
+-                  if (_i2 >= _iterator2.length) break;
+-                  _ref3 = _iterator2[_i2++];
+-                } else {
+-                  _i2 = _iterator2.next();
+-                  if (_i2.done) break;
+-                  _ref3 = _i2.value;
+-                }
+-
+-                const value = _ref3;
+-                const entry = products[query.attribute + '_' + value];
+-
+-                if (entry) {
+-                  products___NODES.push(entry);
+-                } else {
+-                  console.info(`couldn't find product by: ${query.attribute} = ${value}`);
+-                }
+-              }
+-
+-              break;
+-          }
+-        }
+-
+-        const result = {
+-          id: createNodeId(`cms-node-${magentoId}-${idx}`),
+-          blockType: 'products',
+-          value: null,
+-          count: products___NODES.length,
+-          children: products___NODES,
+-          internal: {
+-            type: 'CmsProductListNode',
+-            contentDigest: _crypto.default.createHash(`md5`).update(block.conditions_encoded).digest(`hex`)
+-          }
+-        };
+-        createNode(result);
+-        return result.id;
+-    }
+-  });
+-}
+\ No newline at end of file
+diff --git a/node_modules/gatsby-source-magento2/nodes/index.js b/node_modules/gatsby-source-magento2/nodes/index.js
+index 1d69061..72437ec 100644
+--- a/node_modules/gatsby-source-magento2/nodes/index.js
++++ b/node_modules/gatsby-source-magento2/nodes/index.js
+@@ -13,8 +13,6 @@ var _categories = _interopRequireDefault(require("./categories.js"));
+ 
+ var _storeConfig = _interopRequireDefault(require("./storeConfig.js"));
+ 
+-var _cmsBlocks = _interopRequireDefault(require("./cmsBlocks.js"));
+-
+ var _schema = _interopRequireDefault(require("../schema"));
+ 
+ function createMagentoNodes(_x, _x2) {
+@@ -33,7 +31,6 @@ function _createMagentoNodes() {
+       const config = yield (0, _storeConfig.default)(params, options);
+       yield (0, _products.default)(params, Object.assign({}, options, config), productMap, indexMap);
+       yield (0, _categories.default)(params, Object.assign({}, options, config), productMap, indexMap);
+-      yield (0, _cmsBlocks.default)(params, Object.assign({}, options, config), indexMap);
+     } catch (e) {
+       console.error(e);
+     }
+diff --git a/node_modules/gatsby-source-magento2/nodes/products.js b/node_modules/gatsby-source-magento2/nodes/products.js
+index 9993d61..6b57252 100644
+--- a/node_modules/gatsby-source-magento2/nodes/products.js
++++ b/node_modules/gatsby-source-magento2/nodes/products.js
+@@ -48,6 +48,7 @@ const createProductNodes = ({
+   return new Promise(
+   /*#__PURE__*/
+   function () {
++    activity.start();
+     var _ref = (0, _asyncToGenerator2.default)(function* (resolve, reject) {
+       const client = new _graphqlRequest.GraphQLClient(graphqlEndpoint, {}); // use custom query for querying products
+ 
+diff --git a/node_modules/gatsby-source-magento2/nodes/queries/cmsBlocks.js b/node_modules/gatsby-source-magento2/nodes/queries/cmsBlocks.js
+deleted file mode 100644
+index 892bf6b..0000000
+--- a/node_modules/gatsby-source-magento2/nodes/queries/cmsBlocks.js
++++ /dev/null
+@@ -1,17 +0,0 @@
+-"use strict";
+-
+-exports.__esModule = true;
+-exports.default = void 0;
+-const categoryQuery = `query($ids: [String]) {
+-    gatsbyCmsBlocks(identifiers: $ids)
+-    {
+-        items
+-        {
+-            identifier
+-            title
+-            content
+-        }
+-    }
+-}`;
+-var _default = categoryQuery;
+-exports.default = _default;
+\ No newline at end of file

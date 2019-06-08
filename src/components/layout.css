@@ -620,3 +620,59 @@ pre tt:after {
     font-size: 100%;
   }
 }
+.category {
+  clear: both;
+  padding-top: 20px;
+}
+.category h3 {
+  margin-top: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid gray; 
+}
+.category .product { 
+  width: 33.3%; 
+  float: left; 
+  padding: 5px 5px 5px 5px;
+}
+
+.category .product .title {
+  border-top: 1px solid black;
+  width: 100%;
+  font-size: 25px;
+}
+
+.category .product .title .price {
+  float: right;
+  font-weight: bold;
+}
+
+.category .product .title .product-name { 
+  text-decoration: none;
+  color: black;
+  font-size: 20px;
+}
+
+.product-page h1 .price { 
+  float: right;
+}
+
+.product-page .image {
+  max-width: 300px;
+  width: 100%;
+  float: right;
+}
+
+@media only screen and (max-width: 480px) {
+  .category .product { 
+    width: 100%;
+  }
+  
+  .product-page .image {
+    float: none;
+    max-width: none;
+  }
+
+  .categories a {
+    display: block;
+  }
+}
