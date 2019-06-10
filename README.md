@@ -8,7 +8,9 @@
   Gatsby's Magento2.3 catalog viewer
 </h1>
 
-This is a simple catalog viewer that uses GraphQL and pulls product infromation from Magento2.3. Generates static content during build. 
+This is a simple catalog viewer that uses GraphQL and pulls product infromation from Magento2.3. Generates static content during build.  This example is using [gatsby-source-magento2](https://www.gatsbyjs.org/packages/gatsby-source-magento2/ "gatsby-source-magento2") plugin/
+
+
 
 ## 🚀 Quick start
 
