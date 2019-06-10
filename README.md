@@ -37,6 +37,6 @@ This is a simple catalog viewer that uses GraphQL and pulls product infromation 
 
 ## 💫 Deploy
 
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/gatsbyjs/gatsby-starter-default)
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/Bruspashko/it338final)
 
 <!-- AUTO-GENERATED-CONTENT:END -->
